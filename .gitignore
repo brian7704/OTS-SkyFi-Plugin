@@ -10,7 +10,7 @@ __pycache__/
 *.so
 
 # TODO: Change this line
-ots_plugin_template/ui/
+ots_skyfi_plugin/ui/
 
 # Distribution / packaging
 .Python

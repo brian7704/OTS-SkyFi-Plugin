@@ -1,5 +1,5 @@
-# OTS-Plugin-Template
+# OTS-SkFi-Plugin
 
 ***
 
-Use this repo as a base for writing plugins for OpenTAKServer. For a working plugin example, see the [AISStream Plugin](https://github.com/brian7704/OTS-AISStream-Plugin).
+View your [SkyFi](https://skyfi.com/) orders and create data packages for them.

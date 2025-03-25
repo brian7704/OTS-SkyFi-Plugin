@@ -12,8 +12,8 @@ class DefaultConfig:
     # This file will be loaded first, followed by user overrides from config.yml
     # Make sure not to duplicate any setting name in OpenTAKServers' defaultconfig.py
 
-    OTS_PLUGIN_TEMPLATE_ENABLED = True  # This setting is required. Rename it with your plugin's name
-    OTS_PLUGIN_TEMPLATE_SOME_SETTING = "my_setting_value"
+    OTS_SKYFI_PLUGIN_ENABLED = True  # This setting is required. Rename it with your plugin's name
+    OTS_SKYFI_PLUGIN_API_KEY = ""
 
     # Use this method to validate config values input by the user in the OTS web UI
     # Make sure the return dict is {"success": bool, "error", "Some error message or blank if no errors"}
@@ -23,7 +23,7 @@ class DefaultConfig:
             for key, value in config.items():
                 if key not in DefaultConfig.__dict__.keys():
                     return {"success": False, "error": f"{key} is not a valid config key"}
-                elif key == "OTS_PLUGIN_TEMPLATE_SOME_SETTING" and type(key) is not str:
+                elif key == "OTS_SKYFI_PLUGIN_API_KEY" and type(value) is not str or not value:
                     return {"success": False, "error": f"{key} should be a string"}
 
             return {"success": True, "error": ""}

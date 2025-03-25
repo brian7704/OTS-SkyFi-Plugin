@@ -1,6 +1,6 @@
 [project]
-name = "ots-plugin-template"
-description = "Plugin template for OpenTAKServer plugins"
+name = "OTS-SkyFi-Plugin"
+description = "Creates data packages from your SkyFi ordders"
 authors = [{name = "OpenTAKServer", email = "opentakserver@gmail.com"}]
 readme = "README.md"
 license = "GPL-3.0-or-later"
@@ -9,9 +9,9 @@ documentation = "https://docs.opentakserver.io"
 dynamic = ["entry-points", "version"]
 
 [tool.poetry]
-packages = [{include = "*", from = "ots_plugin_template"}]
+packages = [{include = "*", from = "ots_skyfi_plugin"}]
 # Remove the following line if your plugin doesn't have a UI. If it does have a UI, make sure to run "npm run build" before "poetry build"
-include = [{path = "ots_plugin_template/ui/**/*", format = ["sdist", "wheel"]}]
+include = [{path = "ots_skyfi_plugin/ui/**/*", format = ["sdist", "wheel"]}]
 version = "0.0.0"
 
 [tool.poetry.dependencies]
@@ -27,7 +27,7 @@ style = "semver"
 dirty = false
 pattern = "((?P<epoch>\\d+)!)?(?P<base>\\d+(\\.\\d+)*)"
 
-[tool.poetry-dynamic-versioning.files."ots_plugin_template/__init__.py"] # Change the folder name in this line
+[tool.poetry-dynamic-versioning.files."ots_skyfi_plugin/__init__.py"] # Change the folder name in this line
 persistent-substitution = true
 initial-content = """
   # These version placeholders will be replaced later during substitution.
@@ -40,4 +40,4 @@ requires = ["poetry-core>=2.0.0", "poetry-dynamic-versioning>=1.0.0,<2.0.0", "se
 build-backend = "poetry_dynamic_versioning.backend"
 
 [project.entry-points.'opentakserver.plugin']
-ots_plugin_template = 'ots_plugin_template.app:PluginTemplate' # <----- Change this to your plugin's name
+ots_plugin_template = 'ots_skyfi_plugin.app:SkyFiPlugin' # <----- Change this to your plugin's name

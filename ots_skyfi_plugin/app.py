@@ -2,6 +2,7 @@ import os
 import pathlib
 import traceback
 
+import requests
 import yaml
 from flask import Blueprint, render_template, jsonify, Flask, current_app as app, send_from_directory, request
 from flask_security import roles_accepted
@@ -11,11 +12,17 @@ from opentakserver.extensions import *
 from .default_config import DefaultConfig
 import importlib.metadata
 
+BASE_URL = "https://app.skyfi.com/platform-api/"
+
 
 class SkyFiPlugin(Plugin):
     # Do not change url_prefix
     url_prefix = f"/api/plugins/{pathlib.Path(__file__).resolve().parent.name}"
     blueprint = Blueprint("SkyFiPlugin", __name__, url_prefix=url_prefix)
+
+    def __init__(self):
+        super().__init__()
+        self.load_metadata()
 
     # This is your plugin's entry point. It will be called from OpenTAKServer to start the plugin
     def activate(self, app: Flask):
@@ -26,9 +33,9 @@ class SkyFiPlugin(Plugin):
 
         try:
             # Do stuff here
-            logger.info(f"Successfully Loaded {self._name}")
+            logger.info(f"Successfully Loaded {self.name}")
         except BaseException as e:
-            logger.error(f"Failed to load {self._name}: {e}")
+            logger.error(f"Failed to load {self.name}: {e}")
             logger.error(traceback.format_exc())
 
     # Do not change this
@@ -67,7 +74,7 @@ class SkyFiPlugin(Plugin):
     def get_info(self):
         self.load_metadata()
         self.get_plugin_routes(self.url_prefix)
-        return {'name': self._name, 'distro': self._distro, 'routes': self._routes}
+        return {'name': self.name, 'distro': self.distro, 'routes': self.routes}
 
     def stop(self):
         # Shut down your plugin gracefully here
@@ -106,7 +113,7 @@ class SkyFiPlugin(Plugin):
         # return '', 200
 
         # Otherwise use this line if your plugin requires a UI
-        return send_from_directory(f"{pathlib.Path(__file__).resolve().parent.name}/ui", "index.html", as_attachment=False)
+        return send_from_directory(f"../{pathlib.Path(__file__).parent.resolve().name}/ui", "index.html", as_attachment=False)
 
     # Endpoint to serve static UI files
     @staticmethod
@@ -115,12 +122,11 @@ class SkyFiPlugin(Plugin):
     def serve(file_name):
         logger.debug(f"Path: {file_name}")
         logger.warning(os.path.join(pathlib.Path(__file__).parent.resolve(), "ui", "assets", file_name))
-        if file_name != "" and os.path.exists(
-                os.path.join(pathlib.Path(__file__).parent.resolve(), "ui", "assets", file_name)):
+        if file_name != "" and os.path.exists(os.path.join(pathlib.Path(__file__).parent.resolve(), "ui", "assets", file_name)):
             logger.info(f"Serving {file_name}")
-            return send_from_directory(f"{pathlib.Path(__file__).parent.resolve().name}/ui/assets", file_name)
+            return send_from_directory(f"../{pathlib.Path(__file__).parent.resolve().name}/ui/assets", file_name)
         else:
-            return send_from_directory(f"{pathlib.Path(__file__).parent.resolve().name}/ui", 'index.html')
+            return send_from_directory(f"../{pathlib.Path(__file__).parent.resolve().name}/ui", 'index.html')
 
     # Gets the plugin config for the web UI, do not change
     @staticmethod
@@ -152,5 +158,19 @@ class SkyFiPlugin(Plugin):
             logger.error(traceback.format_exc())
             return jsonify({"success": False, "error": str(e)}), 400
 
-    # Add more routes here. Make sure to use try/except blocks around all of your code. Otherwise, an exception in a plugin
-    # could cause the whole server to crash. Also make sure to properly protect your routes with @auth_required or @roles_accepted
+    @staticmethod
+    @roles_accepted("administrator")
+    @blueprint.route("/orders", methods=["GET"])
+    def get_orders():
+        try:
+            # The user's browser can't query the SkyFi API directly due to CORS so we do it this way instead
+            r = requests.get(f"{BASE_URL}/orders", headers={"X-Skyfi-Api-Key": app.config["OTS_SKYFI_PLUGIN_API_KEY"]})
+
+            if r.status_code == 200:
+                return jsonify(r.json())
+            else:
+                return jsonify({"success": False, "error": "Please check your API key and try again"}), 400
+
+        except BaseException as e:
+            logger.error(f"Failed to get orders:{e}")
+            return jsonify({"success": False, "error": f"Failed to get orders: {str(e)}"}), 400

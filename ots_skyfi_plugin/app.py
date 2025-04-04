@@ -163,8 +163,12 @@ class SkyFiPlugin(Plugin):
     @blueprint.route("/orders", methods=["GET"])
     def get_orders():
         try:
+            page = 0
+            if request.args.get("page"):
+                page = request.args.get("page")
+
             # The user's browser can't query the SkyFi API directly due to CORS so we do it this way instead
-            r = requests.get(f"{BASE_URL}/orders", headers={"X-Skyfi-Api-Key": app.config["OTS_SKYFI_PLUGIN_API_KEY"]})
+            r = requests.get(f"{BASE_URL}/orders", headers={"X-Skyfi-Api-Key": app.config["OTS_SKYFI_PLUGIN_API_KEY"]}, json={}, params={"page": page})
 
             if r.status_code == 200:
                 return jsonify(r.json())

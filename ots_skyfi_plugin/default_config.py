@@ -39,7 +39,7 @@ class DefaultConfig:
             with open(os.path.join(app.config.get("OTS_DATA_FOLDER"), "config.yml"), "r") as config_file:
                 config = yaml.safe_load(config_file.read())
 
-            for setting, value in settings:
+            for setting, value in settings.items():
                 # Update the config to be written to config.yml
                 config[setting] = value
 
@@ -51,6 +51,7 @@ class DefaultConfig:
 
         except BaseException as e:
             logger.error(f"Failed to save settings {settings}: {e}")
+            logger.error(traceback.format_exc())
 
     # Use this method to first validate user input and then write it to config.yml
     @staticmethod

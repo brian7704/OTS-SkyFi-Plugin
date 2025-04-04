@@ -119,14 +119,17 @@ class SkyFiPlugin(Plugin):
     @staticmethod
     @roles_accepted("administrator")
     @blueprint.route('/assets/<file_name>')
+    @blueprint.route("/ui/<file_name>")
     def serve(file_name):
         logger.debug(f"Path: {file_name}")
         logger.warning(os.path.join(pathlib.Path(__file__).parent.resolve(), "ui", "assets", file_name))
         if file_name != "" and os.path.exists(os.path.join(pathlib.Path(__file__).parent.resolve(), "ui", "assets", file_name)):
             logger.info(f"Serving {file_name}")
             return send_from_directory(f"../{pathlib.Path(__file__).parent.resolve().name}/ui/assets", file_name)
+        elif file_name != "" and os.path.exists(os.path.join(pathlib.Path(__file__).parent.resolve(), "ui", file_name)):
+            return send_from_directory(f"../{pathlib.Path(__file__).parent.resolve().name}/ui", file_name)
         else:
-            return send_from_directory(f"../{pathlib.Path(__file__).parent.resolve().name}/ui", 'index.html')
+            return '', 404
 
     # Gets the plugin config for the web UI, do not change
     @staticmethod
@@ -173,6 +176,7 @@ class SkyFiPlugin(Plugin):
             if r.status_code == 200:
                 return jsonify(r.json())
             else:
+                logger.error(f"Failed to get orders: {r.text}")
                 return jsonify({"success": False, "error": "Please check your API key and try again"}), 400
 
         except BaseException as e:

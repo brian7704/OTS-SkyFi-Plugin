@@ -4,12 +4,15 @@ description = "Creates data packages from your SkyFi ordders"
 authors = [{name = "OpenTAKServer", email = "opentakserver@gmail.com"}]
 readme = "README.md"
 license = "GPL-3.0-or-later"
-repository = "https://github.com/brian7704/OpenTAKServer"
-documentation = "https://docs.opentakserver.io"
 dynamic = ["entry-points", "version"]
 
+[project.urls]
+Repository = "https://github.com/brian7704/OTS-SkyFi-Plugin"
+Documentation = "https://docs.opentakserver.io"
+
 [tool.poetry]
-packages = [{include = "*", from = "ots_skyfi_plugin"}]
+requires-poetry = ">=2.0"
+#packages = [{include = "*", from = "ots_skyfi_plugin"}]
 # Remove the following line if your plugin doesn't have a UI. If it does have a UI, make sure to run "npm run build" before "poetry build"
 include = [{path = "ots_skyfi_plugin/ui/**/*", format = ["sdist", "wheel"]}]
 version = "0.0.0"
@@ -40,4 +43,4 @@ requires = ["poetry-core>=2.0.0", "poetry-dynamic-versioning>=1.0.0,<2.0.0", "se
 build-backend = "poetry_dynamic_versioning.backend"
 
 [project.entry-points.'opentakserver.plugin']
-ots_plugin_template = 'ots_skyfi_plugin.app:SkyFiPlugin' # <----- Change this to your plugin's name
+ots_skyfi_plugin = 'ots_skyfi_plugin.app:SkyFiPlugin' # <----- Change this to your plugin's name

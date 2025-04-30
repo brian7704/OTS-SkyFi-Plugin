@@ -199,7 +199,7 @@ class SkyFiPlugin(Plugin):
         r = requests.get(f"{BASE_URL}/orders/{uid}/image", headers={"X-Skyfi-Api-Key": app.config["OTS_SKYFI_PLUGIN_API_KEY"]})
 
         if r.status_code == 200:
-            return base64.b64encode(r.content).decode("UTF-8"), 200
+            return f"data:image/png;base64,{base64.b64encode(r.content).decode('UTF-8')}", 200
         else:
             return jsonify({'success': False, 'error': f"Image download failed with status code {r.status_code}"}), r.status_code
 

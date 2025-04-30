@@ -1,6 +1,9 @@
+import base64
 import os
 import pathlib
 import traceback
+from urllib.parse import unquote
+from xml.etree.ElementTree import Element, SubElement, tostring
 
 import requests
 import yaml
@@ -8,6 +11,7 @@ from flask import Blueprint, render_template, jsonify, Flask, current_app as app
 from flask_security import roles_accepted
 from opentakserver.plugins.Plugin import Plugin
 from opentakserver.extensions import *
+from opentakserver.blueprints.marti_api.data_package_marti_api import create_data_package_zip
 
 from .default_config import DefaultConfig
 import importlib.metadata
@@ -187,3 +191,53 @@ class SkyFiPlugin(Plugin):
         except BaseException as e:
             logger.error(f"Failed to get orders:{e}")
             return jsonify({"success": False, "error": f"Failed to get orders: {str(e)}"}), 400
+
+    @staticmethod
+    @roles_accepted("administrator")
+    @blueprint.route("/<uid>/image")
+    def get_preview_image(uid: str):
+        r = requests.get(f"{BASE_URL}/orders/{uid}/image", headers={"X-Skyfi-Api-Key": app.config["OTS_SKYFI_PLUGIN_API_KEY"]})
+
+        if r.status_code == 200:
+            return base64.b64encode(r.content).decode("UTF-8"), 200
+        else:
+            return jsonify({'success': False, 'error': f"Image download failed with status code {r.status_code}"}), r.status_code
+
+    @staticmethod
+    @roles_accepted("administrator")
+    @blueprint.route("/<uid>/data_package", methods=["POST", "GET"])
+    def create_data_package(uid: str):
+        r = requests.get(f"{BASE_URL}/orders/{uid}", headers={"X-Skyfi-Api-Key": app.config["OTS_SKYFI_PLUGIN_API_KEY"]}, json={})
+
+        if r.status_code != 200:
+            return jsonify({'success': False, 'error': f"Failed to get order: {r.status_code}"}), r.status_code
+
+        order = r.json()
+
+        multi_layer_tile_source = Element("customMultiLayerMapSource")
+        multi_layer_tile_source.text = f"SkyFi-{order['orderCode']} {order['geocodeLocation']}"
+
+        layers = SubElement(multi_layer_tile_source, "layers")
+
+        google_tiles = SubElement(layers, "customMapSource")
+        SubElement(google_tiles, "name").text = "Google Hybrid"
+        SubElement(google_tiles, "minZoom").text = "0"
+        SubElement(google_tiles, "maxZoom").text = "22"
+        SubElement(google_tiles, "tileType").text = "jpg"
+        SubElement(google_tiles, "tileUpdate").text = "None"
+        SubElement(google_tiles, "url").text = unquote("http://mt1.google.com/vt/lyrs=y&amp;x={$x}&amp;y={$y}&amp;z={$z}")
+
+        skyfi_tiles = SubElement(layers, "customMapSource")
+        SubElement(skyfi_tiles, "name").text = f"SkyFi-{order['orderCode']} {order['geocodeLocation']}"
+        SubElement(skyfi_tiles, "minZoom").text = "0"
+        SubElement(skyfi_tiles, "maxZoom").text = "22"
+        SubElement(skyfi_tiles, "tileType").text = "png"
+        SubElement(skyfi_tiles, "tileUpdate").text = "None"
+        SubElement(skyfi_tiles, "url").text = unquote(order['tilesUrl'].replace("{z}", "{$z}").replace("{x}", "{$x}").replace("{y}", "{$y}"))
+
+        with open(os.path.join(app.config.get("UPLOAD_FOLDER"), f"SkyFi-{order['orderCode']}_{order['geocodeLocation']}.xml"), "w") as f:
+            f.write(tostring(multi_layer_tile_source).decode("UTF-8"))
+
+        create_data_package_zip(os.path.join(app.config.get("UPLOAD_FOLDER"), f"SkyFi-{order['orderCode']}_{order['geocodeLocation']}.xml"))
+
+        return jsonify({'success': True}), 200

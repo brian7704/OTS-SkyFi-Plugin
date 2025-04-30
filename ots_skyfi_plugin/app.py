@@ -25,7 +25,7 @@ class SkyFiPlugin(Plugin):
         self.load_metadata()
 
     # This is your plugin's entry point. It will be called from OpenTAKServer to start the plugin
-    def activate(self, app: Flask):
+    def activate(self, app: Flask, enabled: bool = True):
         # Do not change these three lines
         self._app = app
         self._load_config()
@@ -48,10 +48,11 @@ class SkyFiPlugin(Plugin):
                     self.distro = distro
                     info = importlib.metadata.metadata(self.distro)
                     self._metadata = info.json
-                    break
+                    return info.json
 
         except BaseException as e:
             logger.error(e)
+            return None
 
     # Loads default config and user config from ~/ots/config.yml
     # Do not change
@@ -167,11 +168,15 @@ class SkyFiPlugin(Plugin):
     def get_orders():
         try:
             page = 0
+            page_size = 9
+
             if request.args.get("page"):
                 page = request.args.get("page")
+            if request.args.get("page_size"):
+                page_size = request.args.get("page_size")
 
             # The user's browser can't query the SkyFi API directly due to CORS so we do it this way instead
-            r = requests.get(f"{BASE_URL}/orders", headers={"X-Skyfi-Api-Key": app.config["OTS_SKYFI_PLUGIN_API_KEY"]}, json={}, params={"pageNumber": page})
+            r = requests.get(f"{BASE_URL}/orders", headers={"X-Skyfi-Api-Key": app.config["OTS_SKYFI_PLUGIN_API_KEY"]}, json={}, params={"pageNumber": page, "pageSize": page_size})
 
             if r.status_code == 200:
                 return jsonify(r.json())

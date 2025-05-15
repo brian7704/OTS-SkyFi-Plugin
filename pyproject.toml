@@ -12,7 +12,6 @@ Documentation = "https://docs.opentakserver.io"
 
 [tool.poetry]
 requires-poetry = ">=2.0"
-#packages = [{include = "*", from = "ots_skyfi_plugin"}]
 # Remove the following line if your plugin doesn't have a UI. If it does have a UI, make sure to run "npm run build" before "poetry build"
 include = [{path = "ots_skyfi_plugin/ui/**/*", format = ["sdist", "wheel"]}]
 version = "0.0.0"

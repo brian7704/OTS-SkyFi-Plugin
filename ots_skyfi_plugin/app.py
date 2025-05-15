@@ -7,7 +7,7 @@ from xml.etree.ElementTree import Element, SubElement, tostring
 
 import requests
 import yaml
-from flask import Blueprint, render_template, jsonify, Flask, current_app as app, send_from_directory, request
+from flask import Blueprint, jsonify, Flask, current_app as app, send_from_directory, request
 from flask_security import roles_accepted
 from opentakserver.plugins.Plugin import Plugin
 from opentakserver.extensions import *
@@ -21,7 +21,8 @@ BASE_URL = "https://app.skyfi.com/platform-api/"
 
 class SkyFiPlugin(Plugin):
     # Do not change url_prefix
-    url_prefix = f"/api/plugins/{pathlib.Path(__file__).resolve().parent.name}"
+    metadata = importlib.metadata.metadata(pathlib.Path(__file__).resolve().parent.name)
+    url_prefix = f"/api/plugins/{metadata['Name'].lower()}"
     blueprint = Blueprint("SkyFiPlugin", __name__, url_prefix=url_prefix)
 
     def __init__(self):
@@ -45,18 +46,14 @@ class SkyFiPlugin(Plugin):
     # Do not change this
     def load_metadata(self):
         try:
-            distributions = importlib.metadata.packages_distributions()
-            for distro in distributions:
-                if str(__name__).startswith(distro):
-                    self.name = distributions[distro][0]
-                    self.distro = distro
-                    info = importlib.metadata.metadata(self.distro)
-                    self._metadata = info.json
-                    self._metadata['distro'] = distro
-                    return self._metadata
-
+            self.distro = pathlib.Path(__file__).resolve().parent.name
+            self.metadata = importlib.metadata.metadata(self.distro).json
+            self.name = self.metadata['name']
+            self.metadata['distro'] = self.distro
+            return self.metadata
         except BaseException as e:
             logger.error(e)
+            logger.debug(traceback.format_exc())
             return None
 
     # Loads default config and user config from ~/ots/config.yml
@@ -127,8 +124,6 @@ class SkyFiPlugin(Plugin):
     @blueprint.route('/assets/<file_name>')
     @blueprint.route("/ui/<file_name>")
     def serve(file_name):
-        logger.debug(f"Path: {file_name}")
-        logger.warning(os.path.join(pathlib.Path(__file__).parent.resolve(), "ui", "assets", file_name))
         if file_name != "" and os.path.exists(os.path.join(pathlib.Path(__file__).parent.resolve(), "ui", "assets", file_name)):
             logger.info(f"Serving {file_name}")
             return send_from_directory(f"../{pathlib.Path(__file__).parent.resolve().name}/ui/assets", file_name)

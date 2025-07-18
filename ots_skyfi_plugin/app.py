@@ -84,28 +84,6 @@ class SkyFiPlugin(Plugin):
         pass
 
     # Make route methods static to avoid "no-self-use" errors
-    @staticmethod
-    @roles_accepted("administrator")
-    @blueprint.route("/")
-    def plugin_info():  # Do not put "self" as a method parameter here
-        # This method will return JSON with info about the plugin derived from pyproject.toml, please do not change it
-        # Make sure that your plugin has a README.md to show in the UI's about page
-        try:
-            distribution = None
-            distributions = importlib.metadata.packages_distributions()
-            for distro in distributions:
-                if str(__name__).startswith(distro):
-                    distribution = distributions[distro][0]
-                    break
-
-            if distribution:
-                info = importlib.metadata.metadata(distribution)
-                return jsonify(info.json)
-            else:
-                return jsonify({'success': False, 'error': 'Plugin not found'}), 404
-        except BaseException as e:
-            logger.error(e)
-            return jsonify({'success': False, 'error': e}), 500
 
     # OpenTAKServer's web UI will display your plugin's UI in an iframe
     @staticmethod

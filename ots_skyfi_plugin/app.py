@@ -21,8 +21,8 @@ BASE_URL = "https://app.skyfi.com/platform-api/"
 
 class SkyFiPlugin(Plugin):
     # Do not change url_prefix
-    metadata = importlib.metadata.metadata(pathlib.Path(__file__).resolve().parent.name)
-    url_prefix = f"/api/plugins/{metadata['Name'].lower()}"
+    metadata = pathlib.Path(__file__).resolve().parent.name
+    url_prefix = f"/api/plugins/{metadata.lower()}"
     blueprint = Blueprint("SkyFiPlugin", __name__, url_prefix=url_prefix)
 
     def __init__(self):
